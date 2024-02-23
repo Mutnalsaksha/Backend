@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,8 @@ bookserviceSchema.virtual('formattedDate').get(function () {
 
 const BookService = mongoose.model('BookService', bookserviceSchema);
 
+//Use cors middleware
+app.use(cors());
 
 // Middleware
 app.use(bodyParser.json());
