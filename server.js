@@ -45,6 +45,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware to set Content-Type for JavaScript files
+app.use(express.static('public', { 
+  setHeaders: (res, path, stat) => {
+      if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+      }
+  }
+}));
+
 // Route to handle form submission
 app.post('/addbookservice/submit', async (req, res) => {
   try {
