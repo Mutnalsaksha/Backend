@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
