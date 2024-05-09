@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const moment = require('moment-timezone');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,7 +12,8 @@ mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryW
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
-  date: {type: String, default: () => new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })  },
+  // date: {type: String, default: () => new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })  },
+  date: { type: String, required: true},
   name: { type: String, required: true, minlength:3, maxlength:30},
   phoneNumber: {type: String, required: true,  match: /^[0-9]{10}$/ },
   email: { type: String, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
@@ -22,10 +24,10 @@ const bookserviceSchema = new mongoose.Schema({
   toObject: { virtuals: true },
 });
 
-bookserviceSchema.virtual('formattedDate').get(function () {
-  // You can adjust the formatting options as needed
-  return new Date(this.date).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
-});
+// bookserviceSchema.virtual('formattedDate').get(function () {
+//   // You can adjust the formatting options as needed
+//   return new Date(this.date).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+// });
 
 
 const BookService = mongoose.model('BookService', bookserviceSchema);
@@ -59,8 +61,12 @@ app.post('/addbookservice/submit', async (req, res) => {
   try {
     const { name, phoneNumber, email, service, message } = req.body;
 
+    // Get current date and time in Indian timezone
+    const currentDate = moment().tz('Asia/Kolkata').format('YYYY/MM/DD HH:mm:ss');
+    
+
     const newBooking = new BookService({
-      date: new Date().toLocaleString('en-IN', {  timeZone: 'Asia/Kolkata' }), 
+      date: currentDate, 
       name: name,
       phoneNumber: phoneNumber,
       email: email,
@@ -149,16 +155,14 @@ app.get('/displaydata', async (req, res) => {
 // Helper method to format date
 function formatDate(date) {
   const options = {
-    day: '2-digit',
-    month: '2-digit',
     year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Kolkata'
   };
-  return date.toLocaleString('en-IN', options);
+  return date.toLocaleString('en-IN', options).replace(/\//g, '-');
 }
 
 
