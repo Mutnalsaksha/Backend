@@ -2,12 +2,22 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useUnifiedTopology: true, useNewUrlParser: true});
+mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+
+// Define MongoDB schema and model for FrontendLogin collection
+const frontendLoginSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+});
+const FrontendLogin = mongoose.model('FrontendLogin', frontendLoginSchema);
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
@@ -36,6 +46,42 @@ app.use(cors());
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Route for user registration
+app.post('/register', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const existingUser = await FrontendLogin.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newFrontendLogin = new FrontendLogin({ email, password: hashedPassword });
+        await newFrontendLogin.save();
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route for user login
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await FrontendLogin.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        const token = jwt.sign({ email: user.email }, 'your_secret_key', { expiresIn: '1h' });
+        res.status(200).json({ message: 'Login successful', token });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 // CORS middleware to allow cross-origin requests
 app.use((req, res, next) => {
