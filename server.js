@@ -1,3 +1,4 @@
+//hms website backend
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -9,6 +10,18 @@ const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useUnifiedTopology: true, useNewUrlParser: true});
+const db = mongoose.connection;
+
+
+const loginSchema = new mongoose.Schema({
+  email: String,
+  password: String,
+});
+
+const LoginModel = mongoose.model('login', loginSchema, 'login');
+
+
+
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
@@ -55,6 +68,37 @@ app.use(express.static('public', {
       }
   }
 }));
+
+
+
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await LoginModel.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Check password
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Authentication successful
+    res.json({ message: 'Login successful', user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
 
 // Route to handle form submission
 app.post('/addbookservice/submit', async (req, res) => {
