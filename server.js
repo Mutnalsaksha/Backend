@@ -25,12 +25,7 @@ const ticketDetailsSchema = new mongoose.Schema({
 const TicketDetails = mongoose.model('TicketDetails', ticketDetailsSchema);
 module.exports = TicketDetails;
 
-const loginSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-});
 
-const LoginModel = mongoose.model('login', loginSchema, 'login');
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
@@ -73,6 +68,17 @@ app.use(express.static('public', {
 }));
 
 // Login endpoint
+// Define user schema
+const userSchema = new mongoose.Schema({
+  Name: String,
+  Usertype: String,
+  MobileNumber: String,
+  EmailAddress: String,
+  Password: String 
+});
+
+const User = mongoose.model('User', userSchema);
+
 app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -83,14 +89,14 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Find user by email
-    const user = await LoginModel.findOne({ email });
+    const user = await User.findOne({ EmailAddress :email });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Check password
-    if (user.password !== password) {
+    if (user.Password !== password) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
