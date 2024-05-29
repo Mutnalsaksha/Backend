@@ -109,6 +109,21 @@ app.post('/api/login', async (req, res) => {
 });
 
 
+// API route to fetch user profile by email
+app.get('/api/profile', async (req, res) => {
+  const email = req.query.email;
+  try {
+    const user = await User.findOne({ EmailAddress: email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+
 // Route to handle form submission
 app.post('/addbookservice/submit', async (req, res) => {
   try {
@@ -284,6 +299,7 @@ app.get('/api/bookservice/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 // Simple route for the root path
 app.get('/', (req, res) => {
