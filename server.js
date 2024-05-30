@@ -79,6 +79,9 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+app.use(cors());
+app.use(bodyParser.json());
+
 app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -122,6 +125,25 @@ app.get('/api/profile', async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 });
+
+// API route to update user profile
+app.put('/api/profile', async (req, res) => {
+  const { email, name, username, phone, address, bio } = req.body;
+  try {
+    const user = await User.findOneAndUpdate(
+      { EmailAddress: email },
+      { Name: name, Usertype: username, MobileNumber: phone, Address: address, Bio: bio },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
 
 
 // Route to handle form submission
