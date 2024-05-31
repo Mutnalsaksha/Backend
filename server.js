@@ -74,7 +74,10 @@ const userSchema = new mongoose.Schema({
   Usertype: String,
   MobileNumber: String,
   EmailAddress: String,
-  Password: String 
+  Password: String,
+  Username: String,
+  Address: String,
+  Bio: String
 });
 
 const User = mongoose.model('User', userSchema);
@@ -132,7 +135,7 @@ app.put('/api/profile', async (req, res) => {
   try {
     const user = await User.findOneAndUpdate(
       { EmailAddress: email },
-      { Name: name, Usertype: username, MobileNumber: phone, Address: address, Bio: bio },
+      { Name: name, Username: username, MobileNumber: phone, Address: address, Bio: bio },
       { new: true }
     );
     if (!user) {
