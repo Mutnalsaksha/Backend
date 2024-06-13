@@ -12,27 +12,27 @@ const PORT = process.env.PORT || 3000;
 mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useUnifiedTopology: true, useNewUrlParser: true});
 const db = mongoose.connection;
 
-// Define MongoDB schema and model for ticket details
-const ticketDetailsSchema = new mongoose.Schema({
-  // ticketId: { type: String, required: true, unique: true },
-  // assignedTo: { type: String, required: true },
-  // availedDate: { type: Date, required: true },
-  // expectedTimeToClose: { type: String, required: true },
-  // severity: { type: String, required: true },
-  // status: { type: String, required: true }
-  ticketId: { type: String, required: true }, 
-  requestDate: { type: Date, required: true },
-  serviceType: { type: String, required: true },
-  assignedTo: { type: String, required: true },
-  availedDate: { type: Date, required: true },
-  daysOpen: { type: Number, required: true },
-  expectedTimeToClose: { type: Date, required: true },
-  severity: { type: String, required: true },
-  status: { type: String, required: true }
-});
+// // Define MongoDB schema and model for ticket details
+// const ticketDetailsSchema = new mongoose.Schema({
+//   // ticketId: { type: String, required: true, unique: true },
+//   // assignedTo: { type: String, required: true },
+//   // availedDate: { type: Date, required: true },
+//   // expectedTimeToClose: { type: String, required: true },
+//   // severity: { type: String, required: true },
+//   // status: { type: String, required: true }
+//   ticketId: { type: String, required: true }, 
+//   requestDate: { type: Date, required: true },
+//   serviceType: { type: String, required: true },
+//   assignedTo: { type: String, required: true },
+//   availedDate: { type: Date, required: true },
+//   daysOpen: { type: Number, required: true },
+//   expectedTimeToClose: { type: Date, required: true },
+//   severity: { type: String, required: true },
+//   status: { type: String, required: true }
+// });
 
-const TicketDetails = mongoose.model('TicketDetails', ticketDetailsSchema);
-module.exports = TicketDetails;
+// const TicketDetails = mongoose.model('TicketDetails', ticketDetailsSchema);
+// module.exports = TicketDetails;
 
 
 
@@ -192,7 +192,7 @@ const displayDataSchema = new mongoose.Schema({
   assignedTo: String,
   availedDate: { type: Date },
   daysOpen: Number,
-  expectedTimeToClose: String,
+  expectedTimeToClose: {type: Date},
   severity: String,
   status: String
 });
@@ -263,38 +263,38 @@ function formatDate(date) {
 }
 
 
-// Route to handle ticket details submission
-app.post('/addticketdetails', async (req, res) => {
-  try {
-    const { ticketId, assignedTo, availedDate, expectedTimeToClose, severity, status } = req.body;
+// // Route to handle ticket details submission
+// app.post('/addticketdetails', async (req, res) => {
+//   try {
+//     const { ticketId, assignedTo, availedDate, expectedTimeToClose, severity, status } = req.body;
 
-    // Check if the ticketId already exists in the database
-    const existingTicket = await TicketDetails.findOne({ ticketId });
+//     // Check if the ticketId already exists in the database
+//     const existingTicket = await TicketDetails.findOne({ ticketId });
 
-    if (existingTicket) {
-      return res.status(400).json({ error: 'Ticket already exists' });
-    }
+//     if (existingTicket) {
+//       return res.status(400).json({ error: 'Ticket already exists' });
+//     }
 
-    // Create a new ticket details object
-    const newTicketDetails = new TicketDetails({
-      ticketId,
-      assignedTo,
-      availedDate,
-      expectedTimeToClose,
-      severity,
-      status
-    });
+//     // Create a new ticket details object
+//     const newTicketDetails = new TicketDetails({
+//       ticketId,
+//       assignedTo,
+//       availedDate,
+//       expectedTimeToClose,
+//       severity,
+//       status
+//     });
 
-    // Save the new ticket details to the database
-    const savedTicketDetails = await newTicketDetails.save();
+//     // Save the new ticket details to the database
+//     const savedTicketDetails = await newTicketDetails.save();
 
-    // Return the saved ticket details
-    res.status(201).json(savedTicketDetails);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+//     // Return the saved ticket details
+//     res.status(201).json(savedTicketDetails);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 // Route to fetch and display ticket details
 app.get('/getTicketDetails/:id', async (req, res) => {
