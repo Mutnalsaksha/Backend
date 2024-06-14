@@ -243,6 +243,21 @@ app.get('/displaydata', async (req, res) => {
 
     });
 
+    // // Save displayData to the database
+    // for (const data of displayData) {
+    //   await DisplayData.findOneAndUpdate(
+    //     { requestId: data.requestId },
+    //     data,
+    //     { upsert: true, new: true }
+    //   );
+    // }
+
+    // Save displayData to the database
+    await DisplayData.deleteMany({}); // Clear the collection before inserting new data
+
+    await DisplayData.insertMany(displayData);
+
+
     res.json(displayData); // Send the formatted data as JSON response
   } catch (err) {
     res.status(500).json({ message: err.message }); // Handle errors
