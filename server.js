@@ -230,7 +230,7 @@ app.get('/displaydata', async (req, res) => {
       console.log('Number of open days:', diffDays);
 
       // Format requestId with zero-padded index
-      const formattedRequestId = `SR_${String(index + 1).padStart(2, '0')}`;
+      const formattedRequestId = `SR-${String(index + 1).padStart(2, '0')}`;
 
       return {
         requestId: formattedRequestId, // Using the formatted requestId
@@ -301,13 +301,16 @@ app.get('/displaydata', async (req, res) => {
 
 // Endpoint to get data by requestId
 app.get('/request/:id', async (req, res) => {
+  console.log(`Fetching request with ID: ${req.params.id}`); // Log request ID
   try {
     const request = await DisplayData.findOne({ requestId: req.params.id });
     if (!request) {
+      console.log(`Request with ID: ${req.params.id} not found`);
       return res.status(404).send('Request not found');
     }
     res.send(request);
   } catch (error) {
+    console.error(`Error fetching request with ID: ${req.params.id}`, error); // Log errors
     res.status(500).send(error);
   }
 });
@@ -315,6 +318,7 @@ app.get('/request/:id', async (req, res) => {
 
 // Endpoint to update data by requestId
 app.put('/request/:id', async (req, res) => {
+  console.log(`Updating request with ID: ${req.params.id}`); // Log request ID
   try {
     const request = await DisplayData.findOneAndUpdate(
       { requestId: req.params.id },
@@ -322,10 +326,12 @@ app.put('/request/:id', async (req, res) => {
       { new: true }
     );
     if (!request) {
+      console.log(`Request with ID: ${req.params.id} not found`);
       return res.status(404).send('Request not found');
     }
     res.send(request);
   } catch (error) {
+    console.error(`Error updating request with ID: ${req.params.id}`, error); // Log errors
     res.status(500).send(error);
   }
 });
