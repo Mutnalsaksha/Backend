@@ -12,28 +12,6 @@ const PORT = process.env.PORT || 3000;
 mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useUnifiedTopology: true, useNewUrlParser: true});
 const db = mongoose.connection;
 
-// // Define MongoDB schema and model for ticket details
-// const ticketDetailsSchema = new mongoose.Schema({
-//   // ticketId: { type: String, required: true, unique: true },
-//   // assignedTo: { type: String, required: true },
-//   // availedDate: { type: Date, required: true },
-//   // expectedTimeToClose: { type: String, required: true },
-//   // severity: { type: String, required: true },
-//   // status: { type: String, required: true }
-//   ticketId: { type: String, required: true }, 
-//   requestDate: { type: Date, required: true },
-//   serviceType: { type: String, required: true },
-//   assignedTo: { type: String, required: true },
-//   availedDate: { type: Date, required: true },
-//   daysOpen: { type: Number, required: true },
-//   expectedTimeToClose: { type: Date, required: true },
-//   severity: { type: String, required: true },
-//   status: { type: String, required: true }
-// });
-
-// const TicketDetails = mongoose.model('TicketDetails', ticketDetailsSchema);
-// module.exports = TicketDetails;
-
 
 
 // Define MongoDB schema and model
@@ -164,7 +142,7 @@ app.post('/addbookservice/submit', async (req, res) => {
     const { name, phoneNumber, email, service, message } = req.body;
 
     // Get current date and time in Indian timezone
-    const currentDate = moment().tz('Asia/Kolkata').format('YYYY/MM/DD HH:mm:ss');
+    const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
     const newBooking = new BookService({
       date: currentDate, 
@@ -212,7 +190,7 @@ app.get('/displaydata', async (req, res) => {
   try {
     const bookings = await BookService.find(); // Fetch all bookings
     const displayData = bookings.map((booking, index) => {
-      const reqDate = moment(booking.date, 'YYYY/MM/DD HH:mm:ss').toDate();// Convert request date to a Date object
+      const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();// Convert request date to a Date object
       // const formattedDate = formatDate(reqDate); // Format date
       if (isNaN(reqDate)) {
         console.error('Invalid Date:', booking.date);
