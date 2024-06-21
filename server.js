@@ -135,6 +135,15 @@ app.put('/api/profile', async (req, res) => {
 });
 
 
+app.get('/users/assigned', async (req, res) => {
+  try {
+    const users = await User.find({}, 'Name'); // Fetch only the Name field
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 // Route to handle form submission
 app.post('/addbookservice/submit', async (req, res) => {
@@ -219,7 +228,7 @@ app.get('/displaydata', async (req, res) => {
         daysOpen: diffDays, // Number of days the request has been open
         expectedTimeToClose: '', // You need to fill this based on your logic
         severity: booking.severity|| '',
-        status: booking.status|| ''
+        status: 'new'
       };
 
     });
@@ -237,45 +246,6 @@ app.get('/displaydata', async (req, res) => {
 });
 
 
-// app.get('/getTicketDetails/:requestId', async (req, res) => {
-//   try {
-//     // const requestId = req.params.id;
-//     // const ticket = await DisplayData.findOne({ requestId });
-
-//     const ticketId = req.params.requestId; // Correctly retrieve requestId from params
-//     const ticket = await DisplayData.findOne({ requestId: ticketId });
-
-//     if (ticket) {
-//       res.json(ticket);
-//     } else {
-//       res.status(404).send('Ticket not found');
-//     }
-//   } catch (error) {
-//     console.error('Error fetching ticket details:', error);
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
-
-
-// app.get('/getTicketDetails/:requestId', async (req, res) => {
-//   try {
-//     const ticketId = req.params.requestId;
-//     console.log('Fetching ticket details for:', ticketId); // Log to check request ID
-
-//     const ticket = await DisplayData.findOne({ requestId: ticketId });
-
-//     if (ticket) {
-//       console.log('Ticket found:', ticket); // Log ticket details
-//       res.json(ticket);
-//     } else {
-//       console.log('Ticket not found for:', ticketId); // Log ticket not found
-//       res.status(404).send('Ticket not found');
-//     }
-//   } catch (error) {
-//     console.error('Error fetching ticket details:', error); // Log any errors
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
 
 // Endpoint to get data by requestId
 app.get('/request/:id', async (req, res) => {
@@ -313,7 +283,6 @@ app.put('/request/:id', async (req, res) => {
     res.status(500).send(error);
   }
 });
-
 
 // Helper method to format date
 function formatDate(date) {
