@@ -172,6 +172,52 @@ app.post('/addbookservice/submit', async (req, res) => {
 });
 
 
+async function populateDisplayData() {
+  try {
+    // Fetch data from BookService
+    const bookings = await BookService.find();
+
+    // Process and format data as needed for DisplayData
+    const displayData = bookings.map((booking, index) => {
+      const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();
+      if (isNaN(reqDate)) {
+        console.error('Invalid Date:', booking.date);
+      }
+      const now = new Date();
+      const diffTime = Math.abs(now - reqDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      const formattedRequestId = `SR-${String(index + 1).padStart(2, '0')}`;
+
+      return {
+        requestId: formattedRequestId,
+        requestDate: booking.date,
+        serviceType: booking.service,
+        assignedTo: booking.assignedTo || '',
+        availedDate: '',
+        daysOpen: diffDays,
+        expectedTimeToClose: '',
+        severity: booking.severity || '',
+        status: 'new'
+      };
+    });
+
+    // Clear existing data in DisplayData collection
+    await DisplayData.deleteMany({});
+
+    // Insert new data into DisplayData collection
+    await DisplayData.insertMany(displayData);
+
+    console.log('DisplayData collection populated successfully.');
+  } catch (err) {
+    console.error('Error populating DisplayData collection:', err.message);
+  }
+}
+
+// Call the function to populate DisplayData collection
+populateDisplayData();
+
+
 const displayDataSchema = new mongoose.Schema({
   requestId: { type: String, required: true },
   requestDate: { type: Date, required: true },
@@ -197,53 +243,80 @@ module.exports = DisplayData;
 
 app.get('/displaydata', async (req, res) => {
   try {
-    const bookings = await BookService.find(); // Fetch all bookings
-    const displayData = bookings.map((booking, index) => {
-      const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();// Convert request date to a Date object
-      // const formattedDate = formatDate(reqDate); // Format date
-      if (isNaN(reqDate)) {
-        console.error('Invalid Date:', booking.date);
-      }
-      const now = new Date(); // Get the current date and time
+    const displayData = await DisplayData.find(); // Fetch all bookings
 
-      // Calculate the difference in milliseconds between the current date and the request date
-      const diffTime = Math.abs(now - reqDate);
+    // Format data before sending to frontend (if needed)
+    const formattedData = displayData.map((item, index) => ({
+      ...item.toObject(),
+      
+      requestId: `SR-${String(index + 1).padStart(2, '0')}`, // Format requestId as needed
+      // Format requestDate using moment.js
+      requestDate: moment(item.requestDate).format('YYYY-MM-DD HH:mm:ss'),
+      daysOpen: calculateDaysOpen(item.requestDate), // Example function to calculate days open
+      // Add more formatting as required
+    }));
 
-      // Convert the difference in milliseconds to days
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      console.log('Current Date:', now);
-      console.log('Request Date:', reqDate);
-      console.log('Number of open days:', diffDays);
-
-      // Format requestId with zero-padded index
-      const formattedRequestId = `SR-${String(index + 1).padStart(2, '0')}`;
-
-      return {
-        requestId: formattedRequestId, // Using the formatted requestId
-        requestDate: booking.date,
-        serviceType: booking.service,
-        assignedTo: booking.assignedTo|| '',
-        availedDate: '',
-        daysOpen: diffDays, // Number of days the request has been open
-        expectedTimeToClose: '', // You need to fill this based on your logic
-        severity: booking.severity|| '',
-        status: 'new'
-      };
-
-    });
-
-    // Save displayData to the database
-    await DisplayData.deleteMany({}); // Clear the collection before inserting new data
-
-    await DisplayData.insertMany(displayData);
-
-
-    res.json(displayData); // Send the formatted data as JSON response
+    res.json(formattedData); // Send the formatted data as JSON response
   } catch (err) {
     res.status(500).json({ message: err.message }); // Handle errors
   }
 });
+
+// Example function to calculate days open
+function calculateDaysOpen(requestDate) {
+  const now = new Date();
+  const diffTime = Math.abs(now - requestDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+
+
+
+    // const displayData = bookings.map((booking, index) => {
+    //   const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();// Convert request date to a Date object
+    //   // const formattedDate = formatDate(reqDate); // Format date
+    //   if (isNaN(reqDate)) {
+    //     console.error('Invalid Date:', booking.date);
+    //   }
+    //   const now = new Date(); // Get the current date and time
+
+    //   // Calculate the difference in milliseconds between the current date and the request date
+    //   const diffTime = Math.abs(now - reqDate);
+
+    //   // Convert the difference in milliseconds to days
+    //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    //   console.log('Current Date:', now);
+    //   console.log('Request Date:', reqDate);
+    //   console.log('Number of open days:', diffDays);
+
+    //   // Format requestId with zero-padded index
+    //   const formattedRequestId = `SR-${String(index + 1).padStart(2, '0')}`;
+
+    //   return {
+    //     requestId: formattedRequestId, // Using the formatted requestId
+    //     requestDate: booking.date,
+    //     serviceType: booking.service,
+    //     assignedTo: booking.assignedTo|| '',
+    //     availedDate: '',
+    //     daysOpen: diffDays, // Number of days the request has been open
+    //     expectedTimeToClose: '', // You need to fill this based on your logic
+    //     severity: booking.severity|| '',
+    //     status: 'new'
+    //   };
+
+
+  //   // Save displayData to the database
+  //   await DisplayData.deleteMany({}); // Clear the collection before inserting new data
+
+  //   await DisplayData.insertMany(displayData);
+
+
+  //   res.json(displayData); // Send the formatted data as JSON response
+  // } catch (err) {
+  //   res.status(500).json({ message: err.message }); // Handle errors
+  // }
+
 
 
 
