@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 mongoose.connect('mongodb+srv://saksha:1234@cluster0.xnvkwgq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useUnifiedTopology: true, useNewUrlParser: true});
 const db = mongoose.connection;
 
-
+ 
 
 // Define MongoDB schema and model
 const bookserviceSchema = new mongoose.Schema({
@@ -44,45 +44,6 @@ const displayDataSchema = new mongoose.Schema({
 });
 
 const DisplayData = mongoose.model('DisplayData', displayDataSchema);
-
-// Middleware to update DisplayData collection
-async function updateDisplayData(booking) {
-  const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();
-  const now = new Date();
-  const diffTime = Math.abs(now - reqDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  const displayData = {
-    requestId: `SR-${String(booking._id).padStart(2, '0')}`,
-    requestDate: reqDate,
-    serviceType: booking.service,
-    assignedTo: booking.assignedTo || '',
-    availedDate: '',
-    daysOpen: diffDays,
-    expectedTimeToClose: '',
-    severity: booking.severity || '',
-    status: 'new'
-  };
-
-  await DisplayData.findOneAndUpdate(
-    { requestId: displayData.requestId },
-    displayData,
-    { upsert: true, new: true }
-  );
-}
-
-// Middleware hooks for BookService schema
-bookserviceSchema.post('save', async function(doc) {
-  await updateDisplayData(doc);
-});
-
-bookserviceSchema.post('findOneAndUpdate', async function(doc) {
-  await updateDisplayData(doc);
-});
-
-bookserviceSchema.post('findOneAndDelete', async function(doc) {
-  await DisplayData.findOneAndDelete({ requestId: `SR-${String(doc._id).padStart(2, '0')}` });
-});
 
 //Use cors middleware
 app.use(cors());
@@ -225,9 +186,11 @@ app.post('/addbookservice/submit', async (req, res) => {
   }
 });
 
-async function populateDisplayData() {
+
+// Function to start listening to changes in the BookService collection
+async function startChangeStream() {
   try {
-    // Define a change stream on BookService collection
+    // Define a change stream on the BookService collection
     const changeStream = BookService.watch();
 
     // Start listening to changes
@@ -249,7 +212,9 @@ async function populateDisplayData() {
           const diffTime = Math.abs(now - reqDate);
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-          const formattedRequestId = `SR-${String(newBooking._id).padStart(2, '0')}`;
+           // Count the documents in the BookService collection to generate a sequential ID
+           const count = await BookService.countDocuments();
+           const formattedRequestId = `SR-${String(count).padStart(2, '0')}`;
 
           const displayDataEntry = {
             requestId: formattedRequestId,
@@ -278,86 +243,14 @@ async function populateDisplayData() {
     });
 
     console.log('Change stream started for BookService collection.');
-
   } catch (err) {
     console.error('Error setting up change stream:', err.message);
     throw err; // Re-throw error to handle it in the calling function
   }
 }
 
-// Call the function to populate and start the change stream
-populateDisplayData();
-
-
-
-// async function populateDisplayData() {
-//   try {
-//     // Fetch data from BookService
-//     const bookings = await BookService.find();
-
-//     // Process and format data as needed for DisplayData
-//     const displayData = bookings.map((booking, index) => {
-//       const reqDate = moment(booking.date, 'YYYY-MM-DD HH:mm:ss').toDate();
-//       if (isNaN(reqDate)) {
-//         console.error('Invalid Date:', booking.date);
-//       }
-//       const now = new Date();
-//       const diffTime = Math.abs(now - reqDate);
-//       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-//       const formattedRequestId = `SR-${String(index + 1).padStart(2, '0')}`;
-
-//       return {
-//         requestId: formattedRequestId,
-//         requestDate: booking.date,
-//         serviceType: booking.service,
-//         assignedTo: booking.assignedTo || '',
-//         availedDate: '',
-//         daysOpen: diffDays,
-//         expectedTimeToClose: '',
-//         severity: booking.severity || '',
-//         status: 'new'
-//       };
-//     });
-
-//     // Clear existing data in DisplayData collection
-//     await DisplayData.deleteMany({});
-
-//     // Insert new data into DisplayData collection
-//     await DisplayData.insertMany(displayData);
-
-//     console.log('DisplayData collection populated successfully.');
-//   } catch (err) {
-//     console.error('Error populating DisplayData collection:', err.message);
-//   }
-// }
-
-// // Call the function to populate DisplayData collection
-// populateDisplayData();
-
-
-// const displayDataSchema = new mongoose.Schema({
-//   requestId: { type: String, required: true },
-//   requestDate: { type: Date, required: true },
-//   serviceType: { type: String, required: true },
-//   assignedTo: String,
-//   availedDate: { type: Date },
-//   daysOpen: Number,
-//   expectedTimeToClose: {type: Date},
-//   severity: String,
-//   status: String
-// });
-
-// let count = 0; // Define a counter variable outside the pre-save hook
-
-// displayDataSchema.pre('save', function(next) {
-//   this.requestId = ++count; // Increment and assign sequential ID
-//   next();
-// });
-
-// const DisplayData = mongoose.model('DisplayData', displayDataSchema);
-
-// module.exports = DisplayData;
+// Call the function to start the change stream
+startChangeStream();
 
 app.get('/displaydata', async (req, res) => {
   try {
